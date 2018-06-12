@@ -40,6 +40,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void play(View view) {
-        VideoPlayActivity.go(this, "http://video.jiecao.fm/11/23/xin/%E5%81%87%E4%BA%BA.mp4", 0);
+        VideoPlayActivity.go(this, "file:///android_asset/test.mp4", 0);
     }
 }

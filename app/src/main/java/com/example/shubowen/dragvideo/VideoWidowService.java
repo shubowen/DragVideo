@@ -5,16 +5,16 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 /**
  * 疏博文 新建于 2017/7/27.
@@ -24,7 +24,7 @@ import android.widget.Toast;
 
 public class VideoWidowService extends Service {
 
-    private VideoView videoViewRemote;
+    private SurfaceView videoViewRemote;
     private WindowManager mWm;
     private WindowManager.LayoutParams mLp;
     private DragLayout mVideoWidow;
@@ -32,7 +32,6 @@ public class VideoWidowService extends Service {
     private boolean mVideoPreparing;
 
     private boolean hasRemoved = false;
-    private View mTvTip;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -69,26 +68,12 @@ public class VideoWidowService extends Service {
             createAndInitLayoutParams();
         }
 
-        mTvTip.setVisibility(View.VISIBLE);
-
 
         if (null == mWm)
             mWm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
         hasRemoved = false;
         mWm.addView(mVideoWidow, mLp);
-
-        videoViewRemote.setVideoPath(url);
-        videoViewRemote.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mVideoPreparing = false;
-                mTvTip.setVisibility(View.GONE);
-                videoViewRemote.seekTo(position);
-            }
-        });
-
-        videoViewRemote.start();
     }
 
     private void createAndInitLayoutParams() {
@@ -96,8 +81,8 @@ public class VideoWidowService extends Service {
         mLp.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
         mLp.x = (int) (getResources().getDisplayMetrics().density * 50);
         mLp.y = 0;
-        mLp.type = Build.VERSION.SDK_INT >= 25 ?
-                WindowManager.LayoutParams.TYPE_PHONE : WindowManager.LayoutParams.TYPE_TOAST;
+        mLp.type = Build.VERSION.SDK_INT >= 26 ?
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_TOAST;
         mLp.height = -2;
         mLp.width = -2;
 
@@ -118,21 +103,36 @@ public class VideoWidowService extends Service {
                 mWm.updateViewLayout(mVideoWidow, mLp);
             }
         });
-        videoViewRemote = (VideoView) mVideoWidow.findViewById(R.id.video_view);
-        videoViewRemote.setOnClickListener(new View.OnClickListener() {
+        videoViewRemote = (SurfaceView) mVideoWidow.findViewById(R.id.video_view);
+        videoViewRemote.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                VideoPlayer.get().setDisplay(holder);
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+
+            }
+        });
+        /*videoViewRemote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(VideoWidowService.this, "点击了视频", Toast.LENGTH_SHORT).show();
             }
-        });
-        videoViewRemote.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        });*/
+        /*videoViewRemote.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 releaseVideoWidow();
             }
-        });
+        });*/
 
-        mTvTip = mVideoWidow.findViewById(R.id.tv_tip);
 
         View removeIcon = mVideoWidow.findViewById(R.id.iv_remove);
         removeIcon.setOnClickListener(new View.OnClickListener() {
@@ -144,11 +144,11 @@ public class VideoWidowService extends Service {
     }
 
     private void releaseVideoWidow() {
-        if (null != videoViewRemote) {
+        /*if (null != videoViewRemote) {
             if (mVideoPreparing || videoViewRemote.isPlaying()) {
                 videoViewRemote.stopPlayback();
             }
-        }
+        }*/
 
         if (null != mVideoWidow && !hasRemoved)
             mWm.removeViewImmediate(mVideoWidow);

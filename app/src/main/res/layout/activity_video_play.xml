@@ -5,17 +5,10 @@
               android:gravity="center_horizontal"
               android:orientation="vertical">
 
-    <FrameLayout
+    <SurfaceView
+        android:id="@+id/video_view"
         android:layout_width="match_parent"
-        android:layout_height="200dp">
-
-        <com.example.shubowen.dragvideo.VideoView
-            android:id="@+id/video_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"/>
-
-    </FrameLayout>
+        android:layout_height="200dp"/>
 
 
 </LinearLayout>
